@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "102030405060",
+    "project_id": "vku-expense-qr",
+    "storage_bucket": "vku-expense-qr.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:102030405060:android:abcdef1234567890",
+        "android_client_info": {
+          "package_name": "vn.edu.vku.vku_expense_qr"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_placeholder_vku_expense_qr"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
