@@ -11,9 +11,9 @@
 * **Đơn vị đào tạo:** Trường Đại học Công nghệ Thông tin và Truyền thông Việt - Hàn (VKU), Đại học Đà Nẵng
 * **Số lượng thành viên:** 01 thành viên (Độc lập thực hiện 100% các hạng mục từ kiến trúc, xử lý thuật toán QR/OCR, bảo mật Firebase Auth, Cloud Firestore, Firebase Storage, UI/UX đến kiểm thử tự động).
 * **GitHub Repository:** [https://github.com/nt-hzy3n/mobile_mini_project3](https://github.com/nt-hzy3n/mobile_mini_project3)
-* **File APK cài đặt (Release APK):**
-  - Tải trực tiếp từ GitHub Releases: [vku_expense_qr.apk (Release v1.0.0)](https://github.com/nt-hzy3n/mobile_mini_project3/releases/tag/v1.0.0)
-  - Hoặc tệp tin sẵn có trong thư mục dự án: `vku_expense_qr.apk` (hoặc `build/app/outputs/flutter-apk/app-release.apk`)
+* **Link tải trực tiếp file APK (Direct Download):** [https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/vku_expense_qr.apk](https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/vku_expense_qr.apk)
+* **Link GitHub Releases:** [https://github.com/nt-hzy3n/mobile_mini_project3/releases/tag/v1.0.0](https://github.com/nt-hzy3n/mobile_mini_project3/releases/tag/v1.0.0)
+* **File APK trong thư mục dự án:** `vku_expense_qr.apk` (hoặc `build/app/outputs/flutter-apk/app-release.apk`)
 
 ---
 
@@ -235,6 +235,13 @@ lib/
   7. `firestore_model_test.dart` (3 tests): Khởi tạo và serialization model Expense sang Firestore Map với trường Timestamp, lưu trữ banking fields, masked account number; thao tác CRUD trên ExpenseRepository; các phương thức phân tích chi phí theo tháng, tuần và danh mục.
   8. `charts_widget_test.dart` (2 tests): Render widget biểu đồ tròn `CategoryDonutChart` và biểu đồ cột tuần `WeeklyBarChart` sử dụng Canvas API thuần.
   9. `expense_card_test.dart` (1 test): Render thẻ khoản chi `ExpenseCard` với thông tin người nhận, số tiền định dạng VNĐ, nhãn nguồn gốc và sự kiện tap.
+
+### 6.3. Biên dịch Release APK & Tải ứng dụng
+* **Lệnh biên dịch độc lập:** `flutter build apk --release`
+* **File APK tạo ra:** `build/app/outputs/flutter-apk/app-release.apk` (Dung lượng: `101 MB`, chứa toàn bộ model On-device OCR và Firebase).
+* **Link tải trực tiếp file APK (Direct Download):** [https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/vku_expense_qr.apk](https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/vku_expense_qr.apk)
+* **Trang GitHub Releases:** [https://github.com/nt-hzy3n/mobile_mini_project3/releases/tag/v1.0.0](https://github.com/nt-hzy3n/mobile_mini_project3/releases/tag/v1.0.0)
+* **Tệp tin cục bộ trong thư mục dự án:** `vku_expense_qr.apk` (tại thư mục gốc) hoặc `build/app/outputs/flutter-apk/app-release.apk`.
 
 ---
 
