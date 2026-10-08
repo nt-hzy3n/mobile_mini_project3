@@ -1,12 +1,12 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/constants/category_constants.dart';
 import '../../core/services/firebase_storage_service.dart';
 import '../models/expense_model.dart';
+import 'auth_repository.dart';
 
 class ExpenseRepository {
   final FirebaseFirestore? _customFirestore;
@@ -34,17 +34,13 @@ class ExpenseRepository {
     }
   }
 
-  /// Lấy UID người dùng hiện tại (từ customUserId hoặc FirebaseAuth)
+  /// Lấy UID người dùng hiện tại (từ customUserId hoặc AuthRepository)
   String? get currentUserId {
     final uid = _customUserId;
     if (uid != null && uid.isNotEmpty) {
       return uid;
     }
-    try {
-      return FirebaseAuth.instance.currentUser?.uid;
-    } catch (_) {
-      return null;
-    }
+    return AuthRepository.currentUserId;
   }
 
   FirebaseStorageService get _storageService =>

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../data/repositories/auth_repository.dart';
 import '../features/analytics/presentation/analytics_screen.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
@@ -25,6 +26,7 @@ class FirebaseAuthListenable extends ChangeNotifier {
         notifyListeners();
       });
     } catch (_) {}
+    AuthRepository.authStateListenable.addListener(notifyListeners);
   }
 }
 
@@ -33,12 +35,7 @@ final appRouter = GoRouter(
   initialLocation: '/',
   refreshListenable: FirebaseAuthListenable(),
   redirect: (context, state) {
-    User? user;
-    try {
-      user = FirebaseAuth.instance.currentUser;
-    } catch (_) {}
-
-    final isAuthenticated = user != null;
+    final isAuthenticated = AuthRepository.isAuthenticated;
     final loc = state.matchedLocation;
     final isAuthRoute =
         loc == '/login' || loc == '/register' || loc == '/forgot-password';
