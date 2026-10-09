@@ -79,26 +79,26 @@ lib/
 Dưới đây là các ảnh chụp thực tế màn hình ứng dụng đang hoạt động trực tiếp trên thiết bị Android Emulator:
 
 ### 4.1. Màn hình Đăng nhập & Nút Dùng thử 1-Chạm (Login & 1-Click Demo)
-![Màn hình Đăng nhập](docs/screenshots/01_login_screen.png)
+![Màn hình Đăng nhập](https://raw.githubusercontent.com/nt-hzy3n/mobile_mini_project3/master/docs/screenshots/01_login_screen.png)
 * *Giao diện đăng nhập chuẩn Material 3: Hỗ trợ xác thực Email/Password, tích hợp nút **"🚀 Dùng thử ngay (Tài khoản mẫu)"** và **"Điền nhanh"** giúp người chấm bài vào thẳng app mà không cần cấu hình API.*
 
 ---
 
 ### 4.2. Màn hình Trang chủ & Thẻ Thống kê Thông minh (Dashboard & Smart BalanceCard)
-![Trang chủ và Thẻ Chi tiêu Thông minh](docs/screenshots/02_home_dashboard.png)
+![Trang chủ và Thẻ Chi tiêu Thông minh](https://raw.githubusercontent.com/nt-hzy3n/mobile_mini_project3/master/docs/screenshots/02_home_dashboard.png)
 * *Dashboard hiển thị thẻ số dư Gradient VKU Navy: Hỗ trợ chuyển đổi linh hoạt giữa **"Tháng này" ⇄ "Toàn bộ"**, thống kê nhanh Tuần này / Hôm nay / Tất cả, và danh sách các khoản chi tiêu gần đây.*
 
 ---
 
 ### 4.3. Màn hình Kiểm tra Giao dịch (Review & Verification Screen)
-![Kiểm tra Giao dịch sau khi Quét OCR / QR](docs/screenshots/03_review_verify_screen.png)
+![Kiểm tra Giao dịch sau khi Quét OCR / QR](https://raw.githubusercontent.com/nt-hzy3n/mobile_mini_project3/master/docs/screenshots/03_review_verify_screen.png)
 * *Màn hình Review bắt buộc: Tự động điền dữ liệu bóc tách từ ảnh chuyển khoản (VietinBank, STK che mờ `********6200`, ngày giờ `09/10/2026 17:33`, nội dung giao dịch) kèm form validation chặt chẽ trước khi lưu.*
 
 ---
 
 ### 4.4. Chi tiết Khoản chi & Hộp thoại Chỉnh sửa Ngày linh hoạt
-![Chi tiết Giao dịch và Chỉnh sửa Ngày](docs/screenshots/04_expense_detail_screen.png)
-![Hộp thoại Chỉnh sửa](docs/screenshots/05_edit_expense_dialog.png)
+![Chi tiết Giao dịch và Chỉnh sửa Ngày](https://raw.githubusercontent.com/nt-hzy3n/mobile_mini_project3/master/docs/screenshots/04_expense_detail_screen.png)
+![Hộp thoại Chỉnh sửa](https://raw.githubusercontent.com/nt-hzy3n/mobile_mini_project3/master/docs/screenshots/05_edit_expense_dialog.png)
 * *Màn hình xem chi tiết khoản chi (huy hiệu "Xác thực từ mã QR", dữ liệu gốc EMVCo TLV) và hộp thoại chỉnh sửa tích hợp sẵn Date Picker giúp cập nhật ngày giao dịch tức thì.*
 
 ---
