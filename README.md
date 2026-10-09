@@ -175,22 +175,80 @@ lib/
 ---
 
 ## Installation & Run
-1. **Cài đặt thư viện:**
+
+### 1. Dành cho Giảng viên / Người chấm (Trải nghiệm nhanh qua APK)
+Không cần cài đặt Flutter SDK hay cấu hình môi trường, có thể trải nghiệm trực tiếp ứng dụng trên máy Android hoặc máy ảo:
+* **Tải file APK trực tiếp:** [vku_expense_qr.apk (Release v1.0.0)](https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/vku_expense_qr.apk)
+* **Cài đặt qua lệnh ADB (nếu dùng máy ảo / thiết bị cắm cáp):**
+  ```powershell
+  adb install vku_expense_qr.apk
+  ```
+
+---
+
+### 2. Dành cho Lập trình viên (Chạy từ mã nguồn)
+Yêu cầu: Flutter SDK `>= 3.24.0` (khuyên dùng `3.47.x`) và Dart `>= 3.5.0`.
+
+1. **Clone repository:**
+   ```powershell
+   git clone https://github.com/nt-hzy3n/mobile_mini_project3.git
+   cd mobile_mini_project3
+   ```
+
+2. **Cài đặt các gói thư viện:**
    ```powershell
    flutter pub get
    ```
 
-2. **Chạy kiểm thử:**
+3. **Chạy ứng dụng (Debug / Dev):**
+   ```powershell
+   flutter run
+   ```
+
+4. **Chạy toàn bộ 33 Unit & Widget Tests:**
    ```powershell
    flutter test
    ```
 
-3. **Kiểm tra phân tích mã nguồn:**
+5. **Kiểm tra cú pháp & chuẩn mã nguồn:**
    ```powershell
    flutter analyze
    ```
 
-4. **Biên dịch Release APK:**
+6. **Đóng gói file Release APK:**
    ```powershell
    flutter build apk --release
    ```
+   *File APK xuất ra tại: `build/app/outputs/flutter-apk/app-release.apk`*
+
+---
+
+## Hướng dẫn Trải nghiệm & Kiểm thử Tính năng (Testing Guide)
+
+### Bước 1: Đăng nhập 1-Click Demo (Khuyên dùng cho Người chấm)
+* Khi mở ứng dụng, tại màn hình **Đăng nhập (Login)**, nhấn nút **"Dùng thử Demo (Không cần tạo tài khoản)"**.
+* Ứng dụng tự động đăng nhập vào tài khoản kiểm thử mẫu với dữ liệu chi tiêu có sẵn, không yêu cầu nhập email hay mật khẩu.
+* *(Hoặc người dùng có thể tự đăng ký tài khoản mới bằng Email/Password thực tế).*
+
+### Bước 2: Khám phá Dashboard & Thống kê
+* **Chuyển đổi số dư thông minh (Smart Balance Toggle):** Nhấn trực tiếp vào thẻ **Tổng số dư (Balance Card)** trên trang chủ để chuyển đổi qua lại giữa xem **"Chi tiêu tháng này"** và **"Tổng chi tiêu toàn bộ"**.
+* **Biểu đồ CustomPainter thuần túy (Không dùng thư viện bên ngoài):**
+  - Chuyển sang tab **Phân tích (Analytics)** để xem biểu đồ tròn Donut phân bổ tỷ lệ các danh mục.
+  - Xem biểu đồ cột chi tiêu trong tuần (T2 - CN), chạm vào từng cột để xem tooltip số tiền chi tiết.
+
+### Bước 3: Thử nghiệm Quét & Bóc tách Biên lai (QR + OCR)
+* Nhấn nút **Quét biên lai (+)** ở giữa thanh điều hướng dưới:
+  - Chọn **Tải ảnh từ Thư viện (Gallery)** hoặc **Chụp từ Camera**.
+  - Có thể chọn ảnh biên lai chuyển khoản ngân hàng thực tế (MBBank, Vietcombank, Techcombank, VietinBank, MoMo...):
+    - *Ảnh có mã VietQR:* Ứng dụng tự động giải mã chuẩn EMVCo TLV để lấy số tiền, ngân hàng, STK, người nhận.
+    - *Ảnh chụp màn hình không có QR:* Ứng dụng tự động kích hoạt Google ML Kit OCR On-Device và Heuristic Regex để trích xuất số tiền, ngày giờ, người nhận.
+* **Màn hình Review ("Kiểm tra giao dịch"):** Kiểm tra thông tin đã bóc tách, có thể chỉnh sửa số tiền, đổi danh mục, chỉnh ngày giờ, thêm ghi chú trước khi bấm **"Lưu chi tiêu"**.
+
+### Bước 4: Chỉnh sửa & Quản lý Khoản chi
+* Tại danh sách giao dịch, bấm vào một khoản chi bất kỳ để xem chi tiết (kèm ảnh gốc, huy hiệu xác thực QR/OCR).
+* Nhấn nút **"Chỉnh sửa"** (biểu tượng bút chì): Hộp thoại chỉnh sửa cho phép cập nhật số tiền, nội dung, và chọn lại ngày giao dịch qua **Date Picker**.
+* Nhấn nút **"Xóa"** (biểu tượng thùng rác): Có hộp thoại xác nhận an toàn trước khi xóa giao dịch.
+
+### Bước 5: Cài đặt Giao diện Sáng / Tối (Dark Mode)
+* Chuyển sang tab **Cài đặt (Settings)**.
+* Gạt công tắc **"Chế độ Tối (Dark Theme)"** để trải nghiệm giao diện tương phản cao với tông màu VKU Navy sang trọng, trạng thái được tự động lưu bền vững.
