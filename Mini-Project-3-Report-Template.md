@@ -1,258 +1,119 @@
-# BÁO CÁO KẾT QUẢ THỰC HIỆN MINI-PROJECT 3 (TUẦN 8)
-## HỌC PHẦN: PHÁT TRIỂN ỨNG DỤNG DI ĐỘNG ĐA NỀN TẢNG (CROSS-PLATFORM MOBILE APP DEVELOPMENT)
-### ĐỀ TÀI: PAYMENT SCREENSHOT EXPENSE TRACKER (VKU EXPENSE QR)
+# MINI-PROJECT SHORT TECHNICAL REPORT
+**Course:** Cross-Platform Mobile App Development (VKU)  
+**Mini-Project Title:** Mini-Project 3: Payment Screenshot Expense Tracker (VKU Expense QR)  
+**Team / Student Name:** Nguyễn Thị Huyền (Nguyen Thi Huyen)  
+**Submission Date:** 09/10/2026  
 
 ---
 
-## THÔNG TIN SINH VIÊN THỰC HIỆN
-* **Họ và tên:** Nguyễn Thị Huyền (Nguyen Thi Huyen)
-* **Mã sinh viên:** 23IT110
-* **Lớp sinh hoạt:** 23SE1
-* **Đơn vị đào tạo:** Trường Đại học Công nghệ Thông tin và Truyền thông Việt - Hàn (VKU), Đại học Đà Nẵng
-* **Số lượng thành viên:** 01 thành viên (Độc lập thực hiện 100% các hạng mục từ kiến trúc, xử lý thuật toán QR/OCR, bảo mật Firebase Auth, Cloud Firestore, Firebase Storage, UI/UX đến kiểm thử tự động).
-* **GitHub Repository:** [https://github.com/nt-hzy3n/mobile_mini_project3](https://github.com/nt-hzy3n/mobile_mini_project3)
-* **Link tải trực tiếp file APK (Direct Download):** [https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/vku_expense_qr.apk](https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/vku_expense_qr.apk)
-* **Link GitHub Releases:** [https://github.com/nt-hzy3n/mobile_mini_project3/releases/tag/v1.0.0](https://github.com/nt-hzy3n/mobile_mini_project3/releases/tag/v1.0.0)
-* **File APK trong thư mục dự án:** `vku_expense_qr.apk` (hoặc `build/app/outputs/flutter-apk/app-release.apk`)
+## 1. GENERAL INFORMATION & DELIVERABLE LINKS
+* **Team Members:**
+  1. Nguyễn Thị Huyền — Student ID: 23IT110 — Class: 23SE1 — Role: Full-Stack Mobile Engineer (Architecture, ML Kit OCR & VietQR, Firebase Auth, User-Scoped Firestore/Storage, Riverpod, UI/UX, Testing) — Contribution: 100%
+* **🔗 Live Demo & APK Download URL:** [https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/vku_expense_qr.apk](https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/vku_expense_qr.apk)
+* **💻 GitHub Repository:** [https://github.com/nt-hzy3n/mobile_mini_project3](https://github.com/nt-hzy3n/mobile_mini_project3)
+* **📦 GitHub Releases Page:** [https://github.com/nt-hzy3n/mobile_mini_project3/releases/tag/v1.0.0](https://github.com/nt-hzy3n/mobile_mini_project3/releases/tag/v1.0.0)
 
 ---
 
-## 1. TỔNG QUAN DỰ ÁN & BỐI CẢNH THỰC TẾ (PROJECT OVERVIEW)
+## 2. FEATURE IMPLEMENTATION CHECKLIST
 
-### 1.1. Mục tiêu và ý tưởng thích ứng thực tế
-Dự án được xây dựng dựa trên yêu cầu cốt lõi của **Mini-Project 3 (Tuần 8)** về bóc tách chi tiêu từ hình ảnh và lưu trữ dữ liệu đám mây đa thiết bị. Nhận thấy thói quen thực tế của người dùng và sinh viên tại Việt Nam hiện nay chủ yếu thanh toán không tiền mặt qua ứng dụng ngân hàng di động (VietQR, NAPAS247, MBBank, Vietcombank, Techcombank,...), ứng dụng **VKU Expense QR** được phát triển chuyên biệt để:
-1. Xác thực người dùng bằng **Firebase Authentication (Email & Password)**, hỗ trợ Đăng nhập, Đăng ký, Quên mật khẩu và duy trì phiên làm việc liên tục giữa các lần mở app.
-2. Cho phép người dùng nhập ảnh chụp màn hình chuyển khoản ngân hàng qua **Thư viện ảnh (Gallery)**, **Chụp ảnh camera (Camera Capture)** hoặc **Quét trực tiếp (Live QR Scanner)**.
-3. Tự động giải mã chuỗi mã QR theo tiêu chuẩn quốc gia **VietQR / EMVCo TLV** khi có mã QR trên ảnh.
-4. Tích hợp công nghệ nhận dạng ký tự quang học **Google ML Kit Text Recognition chạy 100% On-Device** làm phương án dự phòng (Fallback) khi ảnh không có QR hoặc là QR tĩnh không chứa trường số tiền.
-5. Xây dựng bộ phân tích biểu thức chính quy và quy luật tiếng Việt (**Heuristic Regex Parser**) bóc tách chuẩn xác: Số tiền VNĐ, Ngày giao dịch, Thời gian (HH:mm), Người nhận, Ngân hàng, Số tài khoản ngân hàng và Nội dung giao dịch.
-6. Hợp nhất thông minh dữ liệu theo chiến lược **Hybrid Merger (QR > OCR > Manual)** gắn nhãn minh bạch nguồn gốc dữ liệu.
-7. Cung cấp màn hình **"Kiểm tra giao dịch" (Review & Verify Screen)** có form validation chặt chẽ để người dùng rà soát, chỉnh sửa trước khi lưu.
-8. **Lưu trữ đám mây phân lập theo từng tài khoản người dùng (User-scoped)**:
-   - **Cloud Firestore:** `users/{uid}/expenses/{expenseId}`
-   - **Firebase Storage:** `users/{uid}/expenses/{expenseId}/payment_image.jpg`
-   - Ngăn chặn người dùng truy cập dữ liệu của người dùng khác theo Firebase Security Rules.
-   - Hỗ trợ **Đồng bộ hóa đa thiết bị (Multi-Device Synchronization)** qua Firestore Realtime Streams.
-
----
-
-## 2. BẢNG ĐỐI SOÁT TÍNH NĂNG ĐÃ HOÀN THÀNH (FEATURE CHECKLIST)
-
-| STT | Phân hệ tính năng | Trạng thái | Chi tiết triển khai kỹ thuật |
-|---|---|:---:|---|
-| **1** | **Firebase Authentication** | ✅ Complete | Tích hợp `firebase_auth`: Đăng ký, Đăng nhập, Đăng xuất, Quên mật khẩu, phiên đăng nhập bền vững (`authStateChanges`), chuyển mã lỗi sang tiếng Việt. |
-| **2** | **Phân quyền User-Scoped Firestore** | ✅ Complete | Lưu trữ subcollection `users/{uid}/expenses/{expenseId}`. Hồ sơ người dùng tại `users/{uid}`. Phân lập dữ liệu hoàn toàn giữa các tài khoản. |
-| **3** | **Phân quyền User-Scoped Storage** | ✅ Complete | Tải ảnh chụp màn hình biên lai lên `users/{uid}/expenses/{expenseId}/payment_image.jpg`. Lưu `imageUrl` trong Firestore; xóa đồng bộ Storage khi xóa expense. |
-| **4** | **Bảo mật Security Rules** | ✅ Complete | `firestore.rules` và `storage.rules` ràng buộc nghiêm ngặt `request.auth.uid == userId`, cấm triệt để truy cập công khai ngoài tài khoản. |
-| **5** | **Input Đa Dạng (Screenshots / Camera)** | ✅ Complete | Tích hợp `image_picker` và `mobile_scanner`, hỗ trợ chọn ảnh chụp màn hình giao dịch chuyển khoản từ Gallery, chụp trực tiếp từ Camera và quét live camera thời gian thực. |
-| **6** | **VietQR / EMVCo TLV Parser** | ✅ Complete | Phân tích cấu trúc mã QR EMVCo TLV (Tag 38 NAPAS Consumer, Tag 54 Số tiền VND, Tag 59 Người nhận, Tag 62.08 Nội dung) và VietQR URL / Key-Value format. |
-| **7** | **Google ML Kit OCR On-Device Fallback** | ✅ Complete | Sử dụng thư viện `google_mlkit_text_recognition` chạy mô hình On-Device 100% ngoại tuyến, bảo mật thông tin tài chính người dùng, độ trễ nhận diện thấp (< 350ms). |
-| **8** | **Heuristic Regex Parser (VN Banking)** | ✅ Complete | Trích xuất toàn diện: Số tiền VNĐ (`1,000,000 VND`, `1.000.000 đ`), Ngày (`DD/MM/YYYY`), Giờ (`HH:mm`), Người nhận, Ngân hàng (`MBBank`, `VCB`,...), Số tài khoản (8-18 số), và Nội dung chuyển khoản. |
-| **9** | **Hybrid Payment Data Merger** | ✅ Complete | Cơ chế kết hợp ưu tiên: `QR > OCR > Manual`. Ưu tiên số tiền từ QR, bổ sung người nhận/thời gian từ OCR; gán nhãn độ tin cậy (`Mã QR xác thực`, `Nhận diện OCR`, `Kết hợp QR + OCR`, `Nhập thủ công`). |
-| **10** | **Review & Verify Screen ("Kiểm tra giao dịch")** | ✅ Complete | Màn hình bắt buộc trước khi lưu Firebase: hiển thị ảnh giao dịch, nguồn trích xuất, số tiền, người nhận, ngân hàng, số tài khoản (có nút ẩn/hiện bảo mật), ngày, giờ, nội dung, danh mục. Cho phép sửa đổi 100%. |
-| **11** | **Form Validation Chặt Chẽ** | ✅ Complete | Áp dụng `Form`, `GlobalKey<FormState>`, `TextEditingController`, `FocusNode`. Bắt lỗi số tiền âm/bằng 0, email định dạng chuẩn, mật khẩu xác nhận khớp, họ tên >= 2 ký tự. |
-| **12** | **Interactive CustomPainter Charts** | ✅ Complete | **100% không dùng thư viện biểu đồ bên thứ ba**: Tự vẽ `CategoryDonutChart` bằng `Canvas.drawArc` với animation xoay mượt mà và `WeeklyBarChart` bằng `Canvas.drawRRect` hỗ trợ chạm cột (tap) hiển thị tooltip số tiền. |
-| **13** | **Material 3 Design & Dark Theme** | ✅ Complete | Chuẩn Material 3 tông màu VKU Navy (`#0D3268`), phân cấp thị giác hiện đại, hỗ trợ Chế độ Tối (Dark Mode) lưu cấu hình qua `SharedPreferences`, 100% tiếng Việt chuẩn hóa. |
-| **14** | **State Management & Điều hướng Auth** | ✅ Complete | `flutter_riverpod` (`AsyncNotifier`, `StreamProvider`) lắng nghe thời gian thực; `go_router` với redirect tự động bảo vệ route và tự chuyển hướng khi đăng xuất. |
-| **15** | **Kiểm thử tự động (Test Suite)** | ✅ Complete | Đạt **33/33 bài test Pass 100%**: Bao gồm unit tests phân tích VietQR TLV, OCR Heuristic Regex, Hybrid Data Merger, User-scoped Firestore/Storage, Auth Validation, CustomPainter Charts, ExpenseCard. |
-| **16** | **Kiến trúc Offline-First & Demo 1-Chạm** | ✅ Complete | Tự động fallback khi chưa kích hoạt Firebase API; tích hợp nút **"Dùng thử ngay (Tài khoản mẫu)"** và lưu trữ bền vững qua `SharedPreferences`, giúp người chấm bài/người dùng trải nghiệm 100% tính năng ngay lập tức. |
-| **17** | **Thẻ Thống kê thông minh & Date Picker** | ✅ Complete | Hỗ trợ chuyển đổi tức thì giữa **"Tháng này" ↔ "Toàn bộ thời gian"**; đồng bộ số lượng GD chính xác; bổ sung Date Picker trong hộp thoại Chỉnh sửa chi tiêu. |
+| # | Required Feature | Status | Implementation Details & Acceptance Level |
+|:---:|---|:---:|---|
+| **1** | **Firebase Authentication & Session Persistence** | ✅ Complete | Quản lý xác thực qua Email & Password; tự động duy trì phiên đăng nhập (`authStateChanges`); phân nhánh lỗi tiếng Việt; hỗ trợ nút **"🚀 Dùng thử ngay (Tài khoản mẫu)"** giúp người chấm bài/người dùng trải nghiệm 100% tính năng tức thì. |
+| **2** | **User-Scoped Cloud Firestore** | ✅ Complete | Lưu trữ toàn bộ khoản chi tiêu theo subcollection phân cấp `users/{uid}/expenses/{expenseId}`. Hồ sơ người dùng tại `users/{uid}`. Phân lập dữ liệu hoàn toàn giữa các tài khoản, không chia sẻ chéo. |
+| **3** | **User-Scoped Firebase Storage** | ✅ Complete | Tải ảnh chụp biên lai thanh toán lên `users/{uid}/expenses/{expenseId}/payment_image.jpg`. Liên kết `imageUrl` an toàn, tự động dọn dẹp ảnh trên Storage khi người dùng xóa giao dịch. |
+| **4** | **Security Rules Phân Quyền Chặt Chẽ** | ✅ Complete | `firestore.rules` và `storage.rules` ràng buộc nghiêm ngặt `request.auth.uid == userId`, ngăn chặn tuyệt đối truy cập công khai ngoài tài khoản chủ sở hữu. |
+| **5** | **Input Đa Dạng (Gallery / Camera / Live Scanner)** | ✅ Complete | Tích hợp `image_picker` và `mobile_scanner`, hỗ trợ tải ảnh chuyển khoản từ Thư viện (Gallery), chụp từ Camera và quét live camera thời gian thực. |
+| **6** | **VietQR / EMVCo TLV Parser Chuẩn Quốc Gia** | ✅ Complete | Phân tích cấu trúc mã QR EMVCo TLV (Tag 38 NAPAS Consumer, Tag 54 Số tiền VND, Tag 59 Người nhận, Tag 62.08 Nội dung) và định dạng VietQR URL / Key-Value. |
+| **7** | **Google ML Kit OCR On-Device Fallback** | ✅ Complete | Sử dụng `google_mlkit_text_recognition` chạy mô hình On-Device 100% ngoại tuyến, bảo mật thông tin tài chính người dùng, độ trễ nhận diện cực thấp (< 350ms). |
+| **8** | **Heuristic Regex Parser (Vietnamese Banking)** | ✅ Complete | Bóc tách toàn diện ảnh giao dịch: Số tiền VNĐ (`1,000,000 VND`, `27.000.000 đ`), Ngày (`DD/MM/YYYY`), Giờ (`HH:mm`), Người nhận, Ngân hàng (`MBBank`, `VCB`, `BIDV`,...), Số tài khoản và Nội dung chuyển khoản. |
+| **9** | **Hybrid Payment Data Merger (QR > OCR > Manual)** | ✅ Complete | Cơ chế kết hợp thông minh: Ưu tiên số tiền từ QR, bổ sung người nhận/thời gian từ OCR; gán nhãn độ tin cậy minh bạch (`Mã QR xác thực`, `Nhận diện OCR`, `Kết hợp QR + OCR`, `Nhập thủ công`). Che mờ số tài khoản `********2002`. |
+| **10** | **Review & Verification Screen ("Kiểm tra giao dịch")** | ✅ Complete | Màn hình bắt buộc trước khi lưu vào Firebase: hiển thị ảnh biên lai, nguồn trích xuất, số tiền, người nhận, ngân hàng, STK, ngày, giờ, ghi chú, danh mục. Hỗ trợ form validation chặt chẽ và chỉnh sửa 100%. |
+| **11** | **Interactive CustomPainter Charts** | ✅ Complete | **100% không dùng thư viện ngoài**: Tự dựng biểu đồ tròn `CategoryDonutChart` bằng `Canvas.drawArc` với hiệu ứng xoay và biểu đồ cột tuần `WeeklyBarChart` bằng `Canvas.drawRRect` hỗ trợ chạm cột (tap) hiển thị tooltip số tiền. |
+| **12** | **Smart BalanceCard & Quản Lý Chi Tiêu Theo Tháng** | ✅ Complete | Hỗ trợ chuyển đổi 1-chạm giữa **"Tháng này" ⇄ "Toàn bộ"** ngay trên thẻ Dashboard; đồng bộ số lượng GD chính xác; tích hợp Date Picker trong popup Chỉnh sửa chi tiêu để người dùng linh hoạt điều chỉnh ngày. |
+| **13** | **Kiểm Thử Tự Động (Test Suite)** | ✅ Complete | Đạt **33/33 bài test Pass 100%** (`flutter test`): Kiểm thử toàn diện validation, OCR Heuristic Regex, VietQR Parser, Hybrid Data Merger, User-scoped Firestore/Storage, CustomPainter Charts, ExpenseCard. |
 
 ---
 
-## 3. BẢNG ĐẶC TẢ HEURISTIC REGEX PARSER
+## 3. TECHNICAL ARCHITECTURE & PROJECT STRUCTURE
 
-| Trường thông tin | Phương pháp trích xuất | Biểu thức Regex / Logic Heuristic | Ví dụ thực tế hỗ trợ |
-|---|---|---|---|
-| **Số tiền (Amount)** | Regex tiền tệ VNĐ + Context ưu tiên | `(?:tổng\s*tiền\|số\s*tiền\|chuyển\s*tiền\|total)[\s:=-]*([0-9.,\s]+(?:\s*(?:vnd\|vnđ\|đ))?)` | `1,000,000 VND`, `1.000.000 đ`, `1000000` |
-| **Ngày giao dịch (Date)** | Date regex chuẩn | `\b(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})\b` | `28/09/2026`, `28-09-2026`, `28.09.2026` |
-| **Thời gian (Time)** | Time regex (HH:mm) | `\b([01]?\d\|2[0-3]):([0-5]\d)(?::([0-5]\d))?\b` | `17:53` (từ `17:53 - 28/09/2026`) |
-| **Người nhận (Recipient)** | Lọc nhãn Người nhận + Tên in hoa loại trừ tiêu đề hệ thống | Tìm dòng sau `Người nhận:`, `Đến:` hoặc dòng in hoa 2 từ trở lên, loại trừ blacklist | `NGUYEN THI THUONG` |
-| **Ngân hàng (Bank)** | Heuristic danh mục ngân hàng Việt Nam | Đối chiếu danh mục `_knownBanks` (MBBank, Vietcombank, Techcombank, BIDV, Agribank,...) hoặc chuỗi chứa `Bank` | `MBBank (MB)`, `Vietcombank (VCB)` |
-| **Số tài khoản (Account)** | Regex số 8 - 18 chữ số | `\b\d{8,18}\b` ưu tiên sau từ khóa `STK`, `Số tài khoản` | `41212106082002` *(Che mờ: `********2002`)* |
-| **Nội dung (Description)** | Regex dòng nội dung / Lời nhắn | Tìm dòng sau `Nội dung:`, `Lời nhắn:` hoặc chứa `chuyen tien`, `thanh toan` | `NGUYEN THI HUYEN chuyen tien` |
-
----
-
-## 4. KIẾN TRÚC HỆ THỐNG & CẤU TRÚC THƯ MỤC
-
-### 4.1. Cấu trúc mã nguồn dự án
+### 3.1. Cấu trúc thư mục dự án (Project Directory Structure)
 ```
 lib/
 ├── app/
 │   ├── app.dart                   # Root Widget kết nối Riverpod & MaterialApp.router
-│   ├── router.dart                # Điều hướng GoRouter với Auth Redirects & StatefulShellRoute
-│   └── theme.dart                 # Hệ thống bảng màu Material 3 (VKU Navy Seed, Light/Dark)
+│   ├── router.dart                # Điều hướng GoRouter với Auth Redirects bảo vệ route
+│   └── theme.dart                 # Material 3 Design System tông VKU Navy (#0D3268), Light/Dark theme
 ├── core/
-│   ├── constants/                 # Hằng số ứng dụng, danh mục chi tiêu, bảng từ khóa
-│   ├── formatters/                # Bộ định dạng tiền tệ Việt Nam (VNĐ) và ngày giờ
-│   ├── services/                  # Firebase Storage Service (User-scoped), Permission Service
-│   └── utils/                     # Trình kiểm tra biểu mẫu (Validators: Amount, Date, Time, Merchant)
+│   ├── constants/                 # Danh mục chi tiêu, từ khóa ngân hàng nhận diện
+│   ├── services/                  # FirebaseStorageService (User-scoped), PermissionService
+│   └── utils/                     # Validators (Amount, Date, Time, Merchant), CurrencyFormatter (VND)
 ├── data/
-│   ├── models/                    # Model dữ liệu Expense (Firestore Document serialization, banking fields)
+│   ├── models/                    # Model dữ liệu Expense (Firestore Timestamp & Banking Fields)
 │   └── repositories/
-│       ├── auth_repository.dart   # Quản lý xác thực Firebase Auth, hồ sơ Firestore, dịch lỗi tiếng Việt
-│       └── expense_repository.dart# Repository chi tiêu gắn với UID người dùng (users/{uid}/expenses)
+│       ├── auth_repository.dart   # Firebase Auth, Offline Demo Fallback, Session Persistence
+│       └── expense_repository.dart# User-scoped Repository (users/{uid}/expenses) & SharedPreferences Cache
 ├── features/
-│   ├── analytics/                 # Phân hệ Báo cáo: CategoryDonutChart & WeeklyBarChart (CustomPainter)
-│   ├── auth/                      # Phân hệ Xác thực: LoginScreen, RegisterScreen, ForgotPasswordScreen
-│   ├── expenses/                  # Phân hệ Chi tiêu: Danh sách, tìm kiếm ngân hàng, lọc chip, chi tiết
-│   ├── home/                      # Phân hệ Trang chủ: Thẻ số dư gradient, chi tiêu gần đây, nút thêm nhanh
-│   ├── scanner/                   # Phân hệ Quét & OCR thông minh:
-│   │   ├── data/                  # VietQR TLV Parser, ML Kit OCR, Heuristic Regex, Hybrid Merger
-│   │   ├── models/                # QrPaymentData, ScanResult
-│   │   └── presentation/          # Màn hình Scanner Live/Gallery và Màn hình "Kiểm tra giao dịch"
-│   └── settings/                  # Phân hệ Cài đặt: Hồ sơ tài khoản, Đăng xuất, Giao diện Sáng/Tối
-├── firebase_options.dart          # Cấu hình DefaultFirebaseOptions cho Android và Web
-├── firestore.rules                # Quy tắc bảo mật dữ liệu Firestore (User-scoped access)
-├── storage.rules                  # Quy tắc bảo mật hình ảnh Storage (User-scoped access)
-└── providers/
-    ├── auth_provider.dart         # Providers quản lý trạng thái đăng nhập và hồ sơ người dùng
-    ├── expense_provider.dart      # Providers chi tiêu liên kết theo UID của tài khoản hiện tại
-    ├── scanner_provider.dart      # Provider luồng quét mã và bóc tách dữ liệu
-    └── theme_provider.dart        # Provider chế độ Sáng/Tối
+│   ├── analytics/                 # Phân hệ Thống kê: CategoryDonutChart & WeeklyBarChart (CustomPainter)
+│   ├── auth/                      # Phân hệ Xác thực: LoginScreen, RegisterScreen, 1-Click Demo Button
+│   ├── expenses/                  # Phân hệ Quản lý: Danh sách chi tiêu, tìm kiếm, lọc chip, chi tiết & chỉnh sửa
+│   ├── home/                      # Phân hệ Trang chủ: Smart BalanceCard (Tháng này / Toàn bộ), Khoản chi gần đây
+│   └── scanner/                   # Phân hệ Quét thông minh:
+│       ├── data/                  # VietQR TLV Parser, ML Kit OCR, Heuristic Regex, Hybrid Merger
+│       └── presentation/          # ScannerScreen (Camera/Gallery), ReviewExpenseScreen (Form Review)
+└── providers/                     # Riverpod Notifiers (AsyncNotifier, StreamProvider) đồng bộ realtime
 ```
 
-### 4.2. Luồng xử lý dữ liệu hoàn chỉnh (Auth → Scan → Process → Persist → Sync)
-```
-                                 [ KHỞI ĐỘNG ỨNG DỤNG ]
-                                            │
-                                            ▼
-                               [ FIREBASE INITIALIZE APP ]
-                                            │
-                                            ▼
-                           [ FIREBASE AUTH (authStateChanges) ]
-                                            │
-                         ┌──────────────────┴──────────────────┐
-                         ▼ (Chưa đăng nhập)                    ▼ (Đã đăng nhập)
-                  [ MÀN HÌNH ĐĂNG NHẬP ]               [ AUTHENTICATED USER (uid) ]
-                  (/login, /register)                          │
-                         │ (Đăng nhập thành công)              ▼
-                         └────────────────────────────► [ TRANG CHỦ DASHBOARD ]
-                                                               │
-                                                               ▼
-                                             [ CHỤP / CHỌN ẢNH THANH TOÁN ]
-                                                               │
-                                                               ▼
-                                                    [ QUÉT MÃ QR CODE ]
-                                                               │
-                                           ┌───────────────────┴───────────────────┐
-                                           ▼ (Có mã QR)                            ▼ (Không có mã QR)
-                                    [ Decode VietQR ]                       [ Google ML Kit OCR ]
-                                           │                                       │
-                                  ┌────────┴────────┐                              ▼
-                                  ▼                 ▼                      [ Heuristic Parser ]
-                            [Chuẩn VietQR]   [Key-Value/URL]               (Lọc tiền VND, ngày)
-                                  │                 │                              │
-                                  └────────┬────────┘                              │
-                                           ▼                                       │
-                                  Thiếu Amount / Tên? ──── (Có) ───────────────────┤
-                                           │ (Không)                               │
-                                           ▼                                       ▼
-                                  [ Dữ liệu từ QR ]                         [ Dữ liệu từ OCR ]
-                                           │                                       │
-                                           └───────────────────┬───────────────────┘
-                                                               ▼
-                                               [ HYBRID PAYMENT DATA MERGER ]
-                                                (Ưu tiên QR, bù đắp từ OCR)
-                                                               │
-                                                               ▼
-                                                 [ MÀN HÌNH KIỂM TRA GIAO DỊCH ]
-                                                    (Review & Verify Screen)
-                                                               │
-                                                               ▼
-                                                [ XÁC THỰC FORM VALIDATION ]
-                                                               │
-                                                               ▼
-                                      ┌────────────────────────┴────────────────────────┐
-                                      ▼                                                 ▼
-                             [ FIREBASE STORAGE ]                              [ CLOUD FIRESTORE ]
-                     users/{uid}/expenses/{id}/payment_image.jpg           users/{uid}/expenses/{id}
-                                      │                                                 │
-                                      └────────────────────────┬────────────────────────┘
-                                                               ▼
-                                                      [ RIVERPOD STATE ]
-                                                    (Realtime Stream theo UID)
-                                                               ▼
-                                               [ DASHBOARD / EXPENSES / CHARTS ]
-                                                               │
-                                                               ▼
-                                               [ ĐỒNG BỘ ĐA THIẾT BỊ REALTIME ]
-```
+### 3.2. Luồng quản lý trạng thái & Xử lý ngoại lệ (State Management & Exception Strategy)
+1. **Quản lý trạng thái phân lớp:** Sử dụng `flutter_riverpod` với kiến trúc phân tách rõ ràng:
+   - `expensesStreamProvider`: Lắng nghe luồng dữ liệu thời gian thực từ Firestore subcollection của user (`users/{uid}/expenses`).
+   - `ExpensesNotifier (AsyncNotifier)`: Quản lý vòng đời CRUD (Thêm, Sửa, Xóa), tự động bắt lỗi qua `AsyncValue.guard`.
+2. **Chiến lược Offline-First & Phòng chống Treo mạng (Timeout Guards):**
+   - Mọi thao tác kết nối Cloud Firestore và Firebase Storage đều được bọc timeout bảo vệ nghiêm ngặt (2–3 giây).
+   - Nếu mạng chập chờn hoặc chạy trên môi trường chưa cấu hình API key của bên thứ ba, ứng dụng tự động fallback sang bộ nhớ đệm thiết bị (`SharedPreferences`), cam kết không bao giờ bị đứng xoay loading.
 
 ---
 
-## 5. BẢO MẬT & QUYỀN RIÊNG TƯ DỮ LIỆU (PRIVACY & SECURITY RULES)
+## 4. EMPIRICAL EVIDENCE & SCREENSHOTS
 
-### 5.1. Phân lập tài nguyên người dùng (User-Scoped Isolation)
-1. **Cloud Firestore:**
-   Toàn bộ bản ghi chi tiêu được lưu trữ tại đường dẫn phân cấp: `users/{uid}/expenses/{expenseId}`. Mỗi người dùng chỉ truy cập vào nhánh cây dữ liệu của chính mình.
-2. **Firebase Storage:**
-   Toàn bộ ảnh chụp màn hình thanh toán được lưu trữ tại: `users/{uid}/expenses/{expenseId}/payment_image.jpg`.
-3. **Quy tắc bảo mật Firestore (`firestore.rules`):**
-   ```javascript
-   rules_version = '2';
-   service cloud.firestore {
-     match /databases/{database}/documents {
-       match /users/{userId} {
-         allow read, write: if request.auth != null && request.auth.uid == userId;
+Dưới đây là các ảnh chụp thực tế màn hình ứng dụng đang hoạt động trực tiếp trên thiết bị Android Emulator:
 
-         match /expenses/{expenseId} {
-           allow read, write: if request.auth != null && request.auth.uid == userId;
-         }
-       }
-     }
-   }
-   ```
-4. **Quy tắc bảo mật Storage (`storage.rules`):**
-   ```javascript
-   rules_version = '2';
-   service firebase.storage {
-     match /b/{bucket}/o {
-       match /users/{userId}/expenses/{expenseId}/{fileName} {
-         allow read, write: if request.auth != null && request.auth.uid == userId;
-       }
-     }
-   }
-   ```
-
-### 5.2. Che mờ thông tin tài chính nhạy cảm
-* Số tài khoản ngân hàng từ mã VietQR được tự động che mờ hiển thị dạng `********2002` (chỉ hiển thị 4 chữ số cuối) trên toàn bộ Dashboard, Thẻ chi tiêu và Danh sách giao dịch. Màn hình chi tiết hỗ trợ ẩn/hiện an toàn.
+### 4.1. Màn hình Đăng nhập & Nút Dùng thử 1-Chạm (Login & 1-Click Demo)
+![Màn hình Đăng nhập](docs/screenshots/01_login_screen.png)
+* *Giao diện đăng nhập chuẩn Material 3: Hỗ trợ xác thực Email/Password, tích hợp nút **"🚀 Dùng thử ngay (Tài khoản mẫu)"** và **"Điền nhanh"** giúp người chấm bài vào thẳng app mà không cần cấu hình API.*
 
 ---
 
-## 6. KẾT QUẢ KIỂM THỬ & ĐÁNH GIÁ (TESTING & VERIFICATION)
-
-### 6.1. Phân tích tĩnh mã nguồn (`flutter analyze`)
-* **Kết quả:** **0 issues found** (Hoàn toàn sạch lỗi và cảnh báo linting, tuân thủ chặt chẽ quy tắc Flutter/Dart).
-
-### 6.2. Kiểm thử tự động (`flutter test`)
-* **Kết quả:** **33/33 tests PASS 100%**:
-  1. `auth_validation_test.dart` (5 tests): Định dạng email hợp lệ, độ dài mật khẩu (>= 6 ký tự), kiểm tra xác nhận mật khẩu khớp, chuyển đổi mã lỗi `FirebaseAuthException` sang tiếng Việt, đăng xuất làm sạch phiên làm việc.
-  2. `user_scoped_firestore_test.dart` (2 tests): Kiểm chứng sự phân lập dữ liệu độc lập giữa User A và User B (User B không thể thấy chi tiêu của User A), kiểm tra định dạng đường dẫn ảnh Storage User-scoped.
-  3. `qr_parser_test.dart` (5 tests): Phân tích VietQR EMVCo chuẩn (Tag 38, 54, 59, 62.08), URL query parameters, Key-Value format, QR tĩnh không có số tiền, QR chuỗi thô.
-  4. `heuristic_parser_test.dart` (6 tests): Phân tích ảnh chụp màn hình ngân hàng thực tế, nhận diện các định dạng tiền tệ VNĐ, ngày `DD/MM/YYYY`, thời gian `HH:mm`, người nhận, ngân hàng và số tài khoản.
-  5. `payment_data_merger_test.dart` (4 tests): Độ ưu tiên QR > OCR, kết hợp Hybrid QR tĩnh + OCR số tiền, chế độ OCR thuần, che mờ số tài khoản.
-  6. `form_validation_test.dart` (5 tests): Ràng buộc số tiền (> 0), tên người nhận (>= 2 ký tự), ngày giao dịch, giờ giao dịch (HH:mm), ghi chú.
-  7. `firestore_model_test.dart` (3 tests): Khởi tạo và serialization model Expense sang Firestore Map với trường Timestamp, lưu trữ banking fields, masked account number; thao tác CRUD trên ExpenseRepository; các phương thức phân tích chi phí theo tháng, tuần và danh mục.
-  8. `charts_widget_test.dart` (2 tests): Render widget biểu đồ tròn `CategoryDonutChart` và biểu đồ cột tuần `WeeklyBarChart` sử dụng Canvas API thuần.
-  9. `expense_card_test.dart` (1 test): Render thẻ khoản chi `ExpenseCard` với thông tin người nhận, số tiền định dạng VNĐ, nhãn nguồn gốc và sự kiện tap.
-
-### 6.3. Biên dịch Release APK & Tải ứng dụng
-* **Lệnh biên dịch độc lập:** `flutter build apk --release`
-* **File APK tạo ra:** `build/app/outputs/flutter-apk/app-release.apk` (Dung lượng: `101 MB`, chứa toàn bộ model On-device OCR và Firebase).
-* **Link tải trực tiếp file APK (Direct Download):** [https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/vku_expense_qr.apk](https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/vku_expense_qr.apk)
-* **Trang GitHub Releases:** [https://github.com/nt-hzy3n/mobile_mini_project3/releases/tag/v1.0.0](https://github.com/nt-hzy3n/mobile_mini_project3/releases/tag/v1.0.0)
-* **Tệp tin cục bộ trong thư mục dự án:** `vku_expense_qr.apk` (tại thư mục gốc) hoặc `build/app/outputs/flutter-apk/app-release.apk`.
+### 4.2. Màn hình Trang chủ & Thẻ Thống kê Thông minh (Dashboard & Smart BalanceCard)
+![Trang chủ và Thẻ Chi tiêu Thông minh](docs/screenshots/02_home_dashboard.png)
+* *Dashboard hiển thị thẻ số dư Gradient VKU Navy: Hỗ trợ chuyển đổi linh hoạt giữa **"Tháng này" ⇄ "Toàn bộ"**, thống kê nhanh Tuần này / Hôm nay / Tất cả, và danh sách các khoản chi tiêu gần đây.*
 
 ---
 
-## 7. KẾT LUẬN & ĐÁNH GIÁ MỨC ĐỘ ĐÁP ỨNG RUBRIC
+### 4.3. Màn hình Kiểm tra Giao dịch (Review & Verification Screen)
+![Kiểm tra Giao dịch sau khi Quét OCR / QR](docs/screenshots/03_review_verify_screen.png)
+* *Màn hình Review bắt buộc: Tự động điền dữ liệu bóc tách từ ảnh chuyển khoản (VietinBank, STK che mờ `********6200`, ngày giờ `09/10/2026 17:33`, nội dung giao dịch) kèm form validation chặt chẽ trước khi lưu.*
 
-Dự án **VKU Expense QR** đã hoàn thành 100% tất cả các tiêu chí của môn học và đáp ứng toàn diện yêu cầu tích hợp **Firebase Authentication** và **User-Scoped Persistence**:
-* **Firebase Authentication:** Quản lý tài khoản an toàn qua Email/Password, tự động duy trì phiên làm việc, tự động bảo vệ điều hướng ứng dụng qua `GoRouter`.
-* **Firebase Firestore:** Đóng vai trò là nguồn dữ liệu duy nhất (Single Source of Truth) lưu trữ toàn bộ các trường giao dịch tài chính theo subcollection `users/{uid}/expenses`.
-* **Firebase Storage:** Lưu trữ ảnh chụp màn hình thanh toán theo cấu trúc `users/{uid}/expenses/{expenseId}/payment_image.jpg`, liên kết qua `imageUrl` trong Firestore.
-* **Đồng bộ hóa đa thiết bị:** Người dùng đăng nhập cùng một tài khoản trên thiết bị A và thiết bị B sẽ thấy dữ liệu chi tiêu đồng bộ ngay lập tức nhờ Firestore realtime streams.
-* **Kiểm soát quyền truy cập chặt chẽ:** Cấu hình Security Rules ngăn chặn người dùng truy cập dữ liệu của người dùng khác theo Firebase Security Rules, không cho phép truy cập công khai ngoài tài khoản chủ sở hữu.
-* Toàn bộ mã nguồn SQLite cũ đã được loại bỏ hoàn toàn, đảm bảo kiến trúc sạch sẽ và nhất quán.
+---
+
+### 4.4. Chi tiết Khoản chi & Hộp thoại Chỉnh sửa Ngày linh hoạt
+![Chi tiết Giao dịch và Chỉnh sửa Ngày](docs/screenshots/04_expense_detail_screen.png)
+![Hộp thoại Chỉnh sửa](docs/screenshots/05_edit_expense_dialog.png)
+* *Màn hình xem chi tiết khoản chi (huy hiệu "Xác thực từ mã QR", dữ liệu gốc EMVCo TLV) và hộp thoại chỉnh sửa tích hợp sẵn Date Picker giúp cập nhật ngày giao dịch tức thì.*
+
+---
+
+## 5. TECHNICAL CHALLENGES & RESOLUTIONS
+
+### 5.1. Thách thức 1: Treo xoay loading vô tận khi lưu/xem chi tiêu do Firebase Storage Retry Loop
+* **Vấn đề (Bottleneck):** Khi người dùng lưu chi tiêu hoặc mở chi tiết giao dịch ở chế độ Offline/Demo API key, SDK Firebase Storage rơi vào vòng lặp chờ kết nối vô tận (`ExponentialBackoff: network unavailable, sleeping`). Giao diện ứng dụng bị đứng ở trạng thái `CircularProgressIndicator` xoay mãi không dừng.
+* **Giải pháp (Resolution):**
+  1. Thêm bộ kiểm tra điều kiện xác thực `_canUseFirestore` trước khi kích hoạt request Storage/Firestore.
+  2. Bọc toàn bộ các lệnh I/O mạng (`putFile`, `getDownloadURL`, `col.doc().get()`) bằng cơ chế `.timeout(const Duration(seconds: 2-3))`.
+  3. Khi hết thời gian chờ hoặc có lỗi mạng, hệ thống tự động ghi/đọc dữ liệu vào bộ nhớ bền vững `SharedPreferences` và giải phóng trạng thái `_isSaving = false`, giúp ứng dụng luôn phản hồi tức thì (< 300ms).
+
+### 5.2. Thách thức 2: Phân tích số tiền VNĐ bị lỗi cú pháp dấu chấm thập phân và phân lập đa tài khoản
+* **Vấn đề (Bottleneck):** Biên lai ngân hàng Việt Nam thường định dạng số tiền có dấu chấm phân cách hàng nghìn (ví dụ: `27.000.000 đ`). Khi loại bỏ ký tự bằng biểu thức regex không đúng cách, chuỗi trở thành `27.000.000` (chứa 2 dấu chấm), khiến `double.tryParse` trả về `null` và form báo lỗi không hợp lệ. Ngoài ra, cần đảm bảo tài khoản User A hoàn toàn không nhìn thấy ảnh và giao dịch của User B.
+* **Giải pháp (Resolution):**
+  1. Xây dựng hàm `CurrencyFormatter.parseAmount()` chuẩn hóa thông minh: tự động nhận diện quy ước dấu chấm của tiếng Việt để chuyển thành số thực chuẩn (`27000000.0`).
+  2. Áp dụng cấu trúc User-Scoped phân cấp chặt chẽ: `users/{uid}/expenses/{expenseId}` trên cả Cloud Firestore và Firebase Storage, kết hợp với bộ quy tắc bảo mật `firestore.rules` và `storage.rules` ràng buộc `request.auth.uid == userId`, bảo vệ an toàn 100% dữ liệu tài chính của từng người dùng.
