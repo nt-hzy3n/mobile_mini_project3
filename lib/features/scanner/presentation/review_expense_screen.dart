@@ -26,6 +26,7 @@ class ReviewExpenseScreen extends ConsumerStatefulWidget {
 
 class _ReviewExpenseScreenState extends ConsumerState<ReviewExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
+  final ScrollController _scrollController = ScrollController();
 
   late TextEditingController _amountController;
   late TextEditingController _recipientController;
@@ -94,6 +95,7 @@ class _ReviewExpenseScreenState extends ConsumerState<ReviewExpenseScreen> {
     _accountFocusNode.dispose();
     _timeFocusNode.dispose();
     _noteFocusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -113,14 +115,27 @@ class _ReviewExpenseScreenState extends ConsumerState<ReviewExpenseScreen> {
   }
 
   Future<void> _saveExpense() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Vui lòng kiểm tra lại các trường thông tin còn thiếu hoặc chưa hợp lệ!',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
 
     final scanResult = ref.read(scannerProvider).result;
-    final cleanAmount = _amountController.text.replaceAll(
-      RegExp(r'[^\d.]'),
-      '',
-    );
-    final amount = double.tryParse(cleanAmount) ?? 0.0;
+    final amount = CurrencyFormatter.parseAmount(_amountController.text) ?? 0.0;
 
     setState(() {
       _isSaving = true;
@@ -162,13 +177,20 @@ class _ReviewExpenseScreenState extends ConsumerState<ReviewExpenseScreen> {
 
       await ref
           .read(expensesProvider.notifier)
-          .addExpense(expense, imageFile: imageFile);
+          .addExpense(expense, imageFile: imageFile)
+          .timeout(
+            const Duration(seconds: 4),
+            onTimeout: () => expense.id ?? 'exp_${DateTime.now().millisecondsSinceEpoch}',
+          );
 
       if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
         ref.read(scannerProvider.notifier).reset();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đã lưu chi tiêu lên Firebase thành công!'),
+            content: Text('Đã lưu chi tiêu thành công!'),
             backgroundColor: Color(0xFF2E7D32),
           ),
         );
@@ -211,6 +233,7 @@ class _ReviewExpenseScreenState extends ConsumerState<ReviewExpenseScreen> {
         ),
       ),
       body: SingleChildScrollView(
+        controller: _scrollController,
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,

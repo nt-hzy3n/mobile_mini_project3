@@ -34,12 +34,23 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
 
   Future<void> _loadExpense() async {
     final repo = ref.read(expenseRepositoryProvider);
-    final item = await repo.getExpenseById(widget.expenseId);
-    if (mounted) {
-      setState(() {
-        _expense = item;
-        _isLoading = false;
-      });
+    try {
+      final item = await repo.getExpenseById(widget.expenseId).timeout(
+        const Duration(seconds: 2),
+        onTimeout: () => null,
+      );
+      if (mounted) {
+        setState(() {
+          _expense = item;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -416,6 +427,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
     );
     final noteCtrl = TextEditingController(text: exp.note);
     var selectedCat = exp.category;
+    var selectedDate = exp.date;
 
     await showDialog(
       context: context,
@@ -437,6 +449,29 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                   controller: amountCtrl,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(labelText: 'Số tiền (VND)'),
+                ),
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: ctx,
+                      initialDate: selectedDate,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2035),
+                    );
+                    if (picked != null) {
+                      setDialogState(() => selectedDate = picked);
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'Ngày giao dịch',
+                      suffixIcon: Icon(Icons.calendar_today_rounded, size: 20),
+                    ),
+                    child: Text(
+                      '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}',
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<ExpenseCategory>(
@@ -476,15 +511,14 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
             ElevatedButton(
               onPressed: () async {
                 final amt =
-                    double.tryParse(
-                      amountCtrl.text.replaceAll(RegExp(r'[^\d.]'), ''),
-                    ) ??
+                    CurrencyFormatter.parseAmount(amountCtrl.text) ??
                     exp.amount;
                 final updated = exp.copyWith(
                   merchant: merchantCtrl.text.trim().isNotEmpty
                       ? merchantCtrl.text.trim()
                       : exp.merchant,
                   amount: amt,
+                  date: selectedDate,
                   category: selectedCat,
                   note: noteCtrl.text.trim(),
                   updatedAt: DateTime.now(),

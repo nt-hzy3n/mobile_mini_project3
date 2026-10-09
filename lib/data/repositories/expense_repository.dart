@@ -1,7 +1,12 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/category_constants.dart';
 import '../../core/services/firebase_storage_service.dart';
@@ -17,6 +22,29 @@ class ExpenseRepository {
   // Lưu trữ theo Map<String, List<Expense>>: userId -> list of expenses
   static final Map<String, List<Expense>> _userMemoryFallback = {};
   static bool _hasSeededDefault = false;
+  static const String _prefExpensesKeyPrefix = 'vku_expenses_cache_';
+
+  static void _persistListForUser(String uid, List<Expense> list) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final encoded = jsonEncode(list.map((e) => e.toMap()).toList());
+      await prefs.setString('$_prefExpensesKeyPrefix$uid', encoded);
+    } catch (_) {}
+  }
+
+  static Future<List<Expense>?> _loadPersistedList(String uid) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('$_prefExpensesKeyPrefix$uid');
+      if (raw != null && raw.isNotEmpty) {
+        final decoded = jsonDecode(raw) as List;
+        return decoded
+            .map((item) => Expense.fromMap(Map<String, dynamic>.from(item)))
+            .toList();
+      }
+    } catch (_) {}
+    return null;
+  }
 
   ExpenseRepository({
     FirebaseFirestore? firestore,
@@ -25,12 +53,14 @@ class ExpenseRepository {
   }) : _customFirestore = firestore,
        _customStorageService = storageService,
        _customUserId = userId {
-    final uid = currentUserId;
-    if (uid != null && !_userMemoryFallback.containsKey(uid)) {
+    final uid = currentUserId ?? 'default_user';
+    if (!_userMemoryFallback.containsKey(uid)) {
       _initSampleMemoryForUser(uid);
-    } else if (uid == null && !_hasSeededDefault) {
-      _initSampleMemoryForUser('default_user');
-      _hasSeededDefault = true;
+      _loadPersistedList(uid).then((saved) {
+        if (saved != null && saved.isNotEmpty) {
+          _userMemoryFallback[uid] = saved;
+        }
+      });
     }
   }
 
@@ -45,6 +75,15 @@ class ExpenseRepository {
 
   FirebaseStorageService get _storageService =>
       _customStorageService ?? FirebaseStorageService();
+
+  bool get _canUseFirestore {
+    if (AuthRepository.isPlaceholderConfig) return false;
+    try {
+      return FirebaseAuth.instance.currentUser != null;
+    } catch (_) {
+      return false;
+    }
+  }
 
   /// CollectionReference trỏ đến subcollection: `users/{uid}/expenses`
   CollectionReference<Map<String, dynamic>>? get _collection {
@@ -219,13 +258,18 @@ class ExpenseRepository {
       }
     }
 
-    if (fileToUpload != null) {
+    if (fileToUpload != null && _canUseFirestore) {
       try {
-        final uploadResult = await _storageService.uploadExpenseImage(
-          expenseId: expenseId,
-          imageFile: fileToUpload,
-          userId: currentUserId,
-        );
+        final uploadResult = await _storageService
+            .uploadExpenseImage(
+              expenseId: expenseId,
+              imageFile: fileToUpload,
+              userId: currentUserId,
+            )
+            .timeout(
+              const Duration(seconds: 3),
+              onTimeout: () => null,
+            );
         if (uploadResult != null) {
           imageUrl = uploadResult.imageUrl;
           imagePath = uploadResult.imagePath;
@@ -243,18 +287,24 @@ class ExpenseRepository {
     );
 
     // 2. Lưu document vào Cloud Firestore
-    if (docRef != null) {
+    if (docRef != null && _canUseFirestore) {
       try {
-        await docRef.set(finalExpense.toFirestore());
+        await docRef.set(finalExpense.toFirestore()).timeout(
+          const Duration(seconds: 3),
+          onTimeout: () {
+            debugPrint('Lưu Firestore quá thời gian chờ, chuyển sang bộ nhớ cục bộ');
+          },
+        );
       } catch (e) {
         debugPrint('Lưu Firestore dự phòng qua bộ nhớ cục bộ: $e');
       }
     }
 
-    // Cập nhật bộ nhớ đệm theo user
+    // Cập nhật bộ nhớ đệm theo user và lưu trữ bền vững vào bộ nhớ thiết bị
     final memList = _currentMemoryList;
     memList.removeWhere((e) => e.id == expenseId);
     memList.insert(0, finalExpense);
+    _persistListForUser(currentUserId ?? 'default_user', memList);
 
     return expenseId;
   }
@@ -270,10 +320,22 @@ class ExpenseRepository {
 
   /// Lấy danh sách toàn bộ khoản chi tiêu của người dùng từ Cloud Firestore
   Future<List<Expense>> getExpenses() async {
+    final uid = currentUserId ?? 'default_user';
+    final saved = await _loadPersistedList(uid);
+    if (saved != null && saved.isNotEmpty) {
+      _userMemoryFallback[uid] = saved;
+    }
+
     final col = _collection;
-    if (col != null) {
+    if (col != null && _canUseFirestore) {
       try {
-        final snapshot = await col.orderBy('date', descending: true).get();
+        final snapshot = await col
+            .orderBy('date', descending: true)
+            .get()
+            .timeout(
+              const Duration(seconds: 3),
+              onTimeout: () => throw TimeoutException('Firestore get timeout'),
+            );
 
         if (snapshot.docs.isNotEmpty) {
           final list = snapshot.docs.map((doc) {
@@ -302,7 +364,7 @@ class ExpenseRepository {
   /// Lắng nghe luồng dữ liệu thời gian thực từ Cloud Firestore: `users/{uid}/expenses`
   Stream<List<Expense>> watchExpenses() {
     final col = _collection;
-    if (col != null) {
+    if (col != null && _canUseFirestore) {
       try {
         return col.orderBy('date', descending: true).snapshots().map((
           snapshot,
@@ -322,9 +384,12 @@ class ExpenseRepository {
   /// Lấy chi tiết một khoản chi tiêu theo Firestore Document ID
   Future<Expense?> getExpenseById(String id) async {
     final col = _collection;
-    if (col != null) {
+    if (col != null && _canUseFirestore) {
       try {
-        final doc = await col.doc(id).get();
+        final doc = await col.doc(id).get().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => throw TimeoutException('getExpenseById timeout'),
+        );
         if (doc.exists && doc.data() != null) {
           return Expense.fromFirestore(doc.data()!, doc.id);
         }
@@ -352,13 +417,18 @@ class ExpenseRepository {
     String? imageUrl = expense.imageUrl;
     String? imagePath = expense.imagePath;
 
-    if (newImageFile != null) {
+    if (newImageFile != null && _canUseFirestore) {
       try {
-        final uploadResult = await _storageService.uploadExpenseImage(
-          expenseId: expenseId,
-          imageFile: newImageFile,
-          userId: currentUserId,
-        );
+        final uploadResult = await _storageService
+            .uploadExpenseImage(
+              expenseId: expenseId,
+              imageFile: newImageFile,
+              userId: currentUserId,
+            )
+            .timeout(
+              const Duration(seconds: 3),
+              onTimeout: () => null,
+            );
         if (uploadResult != null) {
           imageUrl = uploadResult.imageUrl;
           imagePath = uploadResult.imagePath;
@@ -375,9 +445,12 @@ class ExpenseRepository {
     );
 
     final col = _collection;
-    if (col != null) {
+    if (col != null && _canUseFirestore) {
       try {
-        await col.doc(expenseId).update(updated.toFirestore());
+        await col
+            .doc(expenseId)
+            .update(updated.toFirestore())
+            .timeout(const Duration(seconds: 3));
       } catch (e) {
         debugPrint('Lỗi cập nhật Firestore: $e');
       }
@@ -387,6 +460,7 @@ class ExpenseRepository {
     final idx = memList.indexWhere((e) => e.id == expenseId);
     if (idx != -1) {
       memList[idx] = updated;
+      _persistListForUser(currentUserId ?? 'default_user', memList);
     }
   }
 
@@ -415,15 +489,16 @@ class ExpenseRepository {
 
     // 2. Xóa document trên Cloud Firestore
     final col = _collection;
-    if (col != null) {
+    if (col != null && _canUseFirestore) {
       try {
-        await col.doc(expenseId).delete();
+        await col.doc(expenseId).delete().timeout(const Duration(seconds: 3));
       } catch (e) {
         debugPrint('Lỗi xóa Firestore: $e');
       }
     }
 
     _currentMemoryList.removeWhere((e) => e.id == expenseId);
+    _persistListForUser(currentUserId ?? 'default_user', _currentMemoryList);
   }
 
   // =========================================================================
@@ -545,6 +620,7 @@ class ExpenseRepository {
       }
     }
     _currentMemoryList.clear();
+    _persistListForUser(currentUserId ?? 'default_user', _currentMemoryList);
   }
 
   Future<void> seedDemoData() async {

@@ -16,6 +16,8 @@ class HomeScreen extends ConsumerWidget {
     final asyncExpenses = ref.watch(expensesProvider);
     final recentExpenses = ref.watch(recentExpensesProvider);
     final monthlyTotal = ref.watch(monthlyTotalProvider);
+    final monthlyCount = ref.watch(monthlyTransactionCountProvider);
+    final allTimeTotal = ref.watch(allTimeTotalProvider);
     final weeklyTotal = ref.watch(weeklyTotalProvider);
     final todayTotal = ref.watch(todayTotalProvider);
 
@@ -87,15 +89,19 @@ class HomeScreen extends ConsumerWidget {
                   child: asyncExpenses.maybeWhen(
                     data: (expenses) => BalanceCard(
                       monthlyTotal: monthlyTotal,
+                      monthlyCount: monthlyCount,
                       weeklyTotal: weeklyTotal,
                       todayTotal: todayTotal,
-                      transactionCount: expenses.length,
+                      allTimeTotal: allTimeTotal,
+                      allTimeCount: expenses.length,
                     ),
                     orElse: () => const BalanceCard(
                       monthlyTotal: 0,
+                      monthlyCount: 0,
                       weeklyTotal: 0,
                       todayTotal: 0,
-                      transactionCount: 0,
+                      allTimeTotal: 0,
+                      allTimeCount: 0,
                     ),
                   ),
                 ),

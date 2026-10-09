@@ -1,3 +1,4 @@
+import '../../../core/utils/currency_formatter.dart';
 import '../models/qr_payment_data.dart';
 
 /// Bộ phân tích TLV (Tag - Length - Value) chuẩn EMVCo QR Code
@@ -234,8 +235,7 @@ class QrPaymentParser {
       double? amount;
       for (final k in ['amount', 'tien', 'sotien', 'total', 'price']) {
         if (map.containsKey(k)) {
-          final clean = map[k]!.replaceAll(RegExp(r'[^\d.]'), '');
-          amount = double.tryParse(clean);
+          amount = CurrencyFormatter.parseAmount(map[k]!);
           if (amount != null) break;
         }
       }

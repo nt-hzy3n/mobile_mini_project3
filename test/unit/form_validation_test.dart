@@ -12,6 +12,7 @@ void main() {
 
       expect(Validators.validateAmount('1,000,000'), isNull);
       expect(Validators.validateAmount('50.000'), isNull);
+      expect(Validators.validateAmount('27.000.000'), isNull);
       expect(Validators.validateAmount('150000'), isNull);
     });
 

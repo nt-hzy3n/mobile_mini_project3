@@ -7,7 +7,7 @@
 ## THÔNG TIN SINH VIÊN THỰC HIỆN
 * **Họ và tên:** Nguyễn Thị Huyền (Nguyen Thi Huyen)
 * **Mã sinh viên:** 23IT110
-* **Lớp sinh hoạt:** 23IT
+* **Lớp sinh hoạt:** 23SE1
 * **Đơn vị đào tạo:** Trường Đại học Công nghệ Thông tin và Truyền thông Việt - Hàn (VKU), Đại học Đà Nẵng
 * **Số lượng thành viên:** 01 thành viên (Độc lập thực hiện 100% các hạng mục từ kiến trúc, xử lý thuật toán QR/OCR, bảo mật Firebase Auth, Cloud Firestore, Firebase Storage, UI/UX đến kiểm thử tự động).
 * **GitHub Repository:** [https://github.com/nt-hzy3n/mobile_mini_project3](https://github.com/nt-hzy3n/mobile_mini_project3)
@@ -55,6 +55,8 @@ Dự án được xây dựng dựa trên yêu cầu cốt lõi của **Mini-Pro
 | **13** | **Material 3 Design & Dark Theme** | ✅ Complete | Chuẩn Material 3 tông màu VKU Navy (`#0D3268`), phân cấp thị giác hiện đại, hỗ trợ Chế độ Tối (Dark Mode) lưu cấu hình qua `SharedPreferences`, 100% tiếng Việt chuẩn hóa. |
 | **14** | **State Management & Điều hướng Auth** | ✅ Complete | `flutter_riverpod` (`AsyncNotifier`, `StreamProvider`) lắng nghe thời gian thực; `go_router` với redirect tự động bảo vệ route và tự chuyển hướng khi đăng xuất. |
 | **15** | **Kiểm thử tự động (Test Suite)** | ✅ Complete | Đạt **33/33 bài test Pass 100%**: Bao gồm unit tests phân tích VietQR TLV, OCR Heuristic Regex, Hybrid Data Merger, User-scoped Firestore/Storage, Auth Validation, CustomPainter Charts, ExpenseCard. |
+| **16** | **Kiến trúc Offline-First & Demo 1-Chạm** | ✅ Complete | Tự động fallback khi chưa kích hoạt Firebase API; tích hợp nút **"Dùng thử ngay (Tài khoản mẫu)"** và lưu trữ bền vững qua `SharedPreferences`, giúp người chấm bài/người dùng trải nghiệm 100% tính năng ngay lập tức. |
+| **17** | **Thẻ Thống kê thông minh & Date Picker** | ✅ Complete | Hỗ trợ chuyển đổi tức thì giữa **"Tháng này" ↔ "Toàn bộ thời gian"**; đồng bộ số lượng GD chính xác; bổ sung Date Picker trong hộp thoại Chỉnh sửa chi tiêu. |
 
 ---
 

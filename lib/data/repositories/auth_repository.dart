@@ -1,8 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../firebase_options.dart';
 
 /// Người dùng mô phỏng cho môi trường thử nghiệm khi chưa cấu hình API Key Firebase thực
 class DemoFirebaseUser implements User {
@@ -42,6 +47,11 @@ class AuthRepository {
       StreamController<User?>.broadcast();
   static final AuthChangeNotifier authStateListenable = AuthChangeNotifier();
 
+  static const String _prefSessionUid = 'auth_session_uid';
+  static const String _prefSessionEmail = 'auth_session_email';
+  static const String _prefSessionName = 'auth_session_name';
+  static const String _prefLocalUsers = 'auth_local_users_registry';
+
   AuthRepository({FirebaseAuth? auth, FirebaseFirestore? firestore})
     : _customAuth = auth,
       _customFirestore = firestore;
@@ -62,7 +72,83 @@ class AuthRepository {
     }
   }
 
-  static void _setDemoUser(String email, String displayName) {
+  /// Khôi phục phiên làm việc bền vững đã lưu từ SharedPreferences khi khởi động app
+  static Future<void> restoreSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedEmail = prefs.getString(_prefSessionEmail);
+      final savedName = prefs.getString(_prefSessionName) ?? 'Người dùng';
+      final savedUid = prefs.getString(_prefSessionUid);
+
+      if (savedEmail != null && savedEmail.isNotEmpty && savedUid != null) {
+        _demoUser = DemoFirebaseUser(
+          uid: savedUid,
+          email: savedEmail,
+          displayName: savedName,
+        );
+        _demoAuthStreamController.add(_demoUser);
+        authStateListenable.notify();
+        debugPrint('[AuthRepository] Đã tự động khôi phục phiên đăng nhập bền vững cho: $savedEmail');
+      }
+    } catch (_) {
+      // Bỏ qua khi test môi trường không có bindings
+    }
+  }
+
+  static Future<void> _persistSession(String uid, String email, String displayName) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefSessionUid, uid);
+      await prefs.setString(_prefSessionEmail, email);
+      await prefs.setString(_prefSessionName, displayName);
+    } catch (_) {}
+  }
+
+  static Future<void> _clearPersistedSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_prefSessionUid);
+      await prefs.remove(_prefSessionEmail);
+      await prefs.remove(_prefSessionName);
+    } catch (_) {}
+  }
+
+  static Future<void> _saveLocalUserRegistry(String email, String password, String name) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_prefLocalUsers);
+      final map = raw != null ? Map<String, dynamic>.from(jsonDecode(raw)) : <String, dynamic>{};
+      map[email.trim().toLowerCase()] = {
+        'password': password,
+        'name': name,
+      };
+      await prefs.setString(_prefLocalUsers, jsonEncode(map));
+    } catch (_) {}
+  }
+
+  static Future<Map<String, dynamic>?> _getLocalUserRegistry(String email) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_prefLocalUsers);
+      if (raw == null) return null;
+      final map = Map<String, dynamic>.from(jsonDecode(raw));
+      return map[email.trim().toLowerCase()] as Map<String, dynamic>?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Kiểm tra cấu hình có đang sử dụng placeholder API key hay không
+  static bool get isPlaceholderConfig {
+    try {
+      final key = DefaultFirebaseOptions.currentPlatform.apiKey;
+      return key.contains('placeholder') || key.isEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static void _setDemoUser(String email, String displayName, {String? password}) {
     final sanitizedUid =
         'user_${email.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}';
     _demoUser = DemoFirebaseUser(
@@ -70,14 +156,28 @@ class AuthRepository {
       email: email,
       displayName: displayName,
     );
+    _persistSession(sanitizedUid, email, displayName);
+    if (password != null && password.isNotEmpty) {
+      _saveLocalUserRegistry(email, password, displayName);
+    }
     _demoAuthStreamController.add(_demoUser);
     authStateListenable.notify();
   }
 
   static void _clearDemoUser() {
     _demoUser = null;
+    _clearPersistedSession();
     _demoAuthStreamController.add(null);
     authStateListenable.notify();
+  }
+
+  /// Đăng nhập nhanh bằng tài khoản Demo để người khác/thầy cô trải nghiệm app 1-chạm
+  Future<void> signInWithDemoAccount() async {
+    _setDemoUser(
+      'demo@vku.udn.vn',
+      'Nguyễn Thị Huyền (Demo)',
+      password: '123456',
+    );
   }
 
   /// Kiểm tra có người dùng đăng nhập không (từ Firebase thực hoặc Demo session)
@@ -155,6 +255,22 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
+    // Nếu API Key đang là placeholder, tự động kích hoạt phiên cục bộ không gọi network lỗi
+    if (isPlaceholderConfig) {
+      debugPrint(
+        '[AuthRepository] Cấu hình API Key mẫu -> Kích hoạt phiên cục bộ cho $email',
+      );
+      final registered = await _getLocalUserRegistry(email);
+      if (registered != null && registered['password'] != null) {
+        if (registered['password'] != password) {
+          throw 'Mật khẩu không chính xác.';
+        }
+      }
+      final name = registered?['name'] ?? email.split('@').first;
+      _setDemoUser(email.trim(), name, password: password);
+      return null;
+    }
+
     final a = _auth;
     try {
       if (a != null) {
@@ -170,19 +286,21 @@ class AuthRepository {
         debugPrint(
           '[AuthRepository] Firebase API Key chưa kích hoạt -> Kích hoạt phiên Demo: $email',
         );
-        _setDemoUser(email.trim(), email.split('@').first);
+        final registered = await _getLocalUserRegistry(email);
+        final name = registered?['name'] ?? email.split('@').first;
+        _setDemoUser(email.trim(), name, password: password);
         return null;
       }
       throw mapAuthException(e);
     } catch (e) {
       if (e.toString().contains('API key not valid')) {
-        _setDemoUser(email.trim(), email.split('@').first);
+        _setDemoUser(email.trim(), email.split('@').first, password: password);
         return null;
       }
       throw 'Đã xảy ra lỗi đăng nhập: $e';
     }
 
-    _setDemoUser(email.trim(), email.split('@').first);
+    _setDemoUser(email.trim(), email.split('@').first, password: password);
     return null;
   }
 
@@ -192,6 +310,15 @@ class AuthRepository {
     required String password,
     required String displayName,
   }) async {
+    // Nếu API Key đang là placeholder, tự động tạo tài khoản cục bộ tức thì
+    if (isPlaceholderConfig) {
+      debugPrint(
+        '[AuthRepository] Cấu hình API Key mẫu -> Tạo tài khoản phiên cục bộ cho $email ($displayName)',
+      );
+      _setDemoUser(email.trim(), displayName.trim(), password: password);
+      return null;
+    }
+
     final a = _auth;
     try {
       if (a != null) {
@@ -256,6 +383,13 @@ class AuthRepository {
 
   /// Gửi email đặt lại mật khẩu
   Future<void> sendPasswordResetEmail({required String email}) async {
+    if (isPlaceholderConfig) {
+      debugPrint(
+        '[AuthRepository] Cấu hình API Key mẫu -> Giả lập gửi email đặt lại mật khẩu cho $email',
+      );
+      return;
+    }
+
     final a = _auth;
     if (a == null) return;
 

@@ -1,3 +1,5 @@
+import 'currency_formatter.dart';
+
 class Validators {
   static String? validateMerchant(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -16,8 +18,7 @@ class Validators {
     if (value.contains('-')) {
       return 'Số tiền không được là số âm';
     }
-    final clean = value.replaceAll(RegExp(r'[^\d.]'), '');
-    final amount = double.tryParse(clean);
+    final amount = CurrencyFormatter.parseAmount(value);
     if (amount == null || amount <= 0) {
       return 'Số tiền phải là số hợp lệ và lớn hơn 0 đ';
     }

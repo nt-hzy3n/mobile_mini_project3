@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/app.dart';
 import 'core/constants/app_constants.dart';
+import 'data/repositories/auth_repository.dart';
 import 'data/repositories/expense_repository.dart';
 import 'firebase_options.dart';
 
@@ -19,6 +20,9 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase initialization notice: $e');
   }
+
+  // Khôi phục phiên đăng nhập bền vững từ bộ nhớ máy (hỗ trợ offline/demo APK)
+  await AuthRepository.restoreSession();
 
   // Tự động nạp dữ liệu mẫu ban đầu nếu chạy lần đầu
   try {

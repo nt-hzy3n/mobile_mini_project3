@@ -126,6 +126,32 @@ final monthlyTotalProvider = Provider<double>((ref) {
   );
 });
 
+/// Số lượng giao dịch trong tháng hiện tại
+final monthlyTransactionCountProvider = Provider<int>((ref) {
+  final asyncExpenses = ref.watch(expensesProvider);
+  final now = DateTime.now();
+
+  return asyncExpenses.maybeWhen(
+    data: (expenses) {
+      return expenses
+          .where((e) => e.date.year == now.year && e.date.month == now.month)
+          .length;
+    },
+    orElse: () => 0,
+  );
+});
+
+/// Tổng chi tiêu toàn thời gian (tất cả các tháng)
+final allTimeTotalProvider = Provider<double>((ref) {
+  final asyncExpenses = ref.watch(expensesProvider);
+
+  return asyncExpenses.maybeWhen(
+    data: (expenses) =>
+        expenses.fold<double>(0.0, (sum, e) => sum + e.amount),
+    orElse: () => 0.0,
+  );
+});
+
 /// Tổng chi tiêu trong tuần hiện tại
 final weeklyTotalProvider = Provider<double>((ref) {
   final asyncExpenses = ref.watch(expensesProvider);

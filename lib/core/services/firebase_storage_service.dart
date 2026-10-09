@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+
+import '../../data/repositories/auth_repository.dart';
 
 class FirebaseStorageResult {
   final String imageUrl;
@@ -34,6 +38,21 @@ class FirebaseStorageService {
     String? userId,
   }) async {
     try {
+      // Nếu đang dùng cấu hình demo/placeholder hoặc chưa có Firebase Auth session thật,
+      // bỏ qua Firebase Storage để tránh treo vòng lặp exponential backoff
+      if (AuthRepository.isPlaceholderConfig) {
+        debugPrint('Chế độ Demo/Placeholder: bỏ qua tải ảnh lên Firebase Storage.');
+        return null;
+      }
+      try {
+        if (FirebaseAuth.instance.currentUser == null) {
+          debugPrint('Chưa đăng nhập Firebase Auth thật: bỏ qua tải ảnh Storage.');
+          return null;
+        }
+      } catch (_) {
+        return null;
+      }
+
       final storageInstance = _storage;
       if (storageInstance == null) return null;
 
@@ -61,8 +80,18 @@ class FirebaseStorageService {
         customMetadata: metadataMap,
       );
 
-      final uploadTask = await storageRef.putFile(imageFile, metadata);
-      final downloadUrl = await uploadTask.ref.getDownloadURL();
+      final uploadTask = await storageRef
+          .putFile(imageFile, metadata)
+          .timeout(
+            const Duration(seconds: 4),
+            onTimeout: () => throw TimeoutException('Tải ảnh Storage quá thời gian'),
+          );
+      final downloadUrl = await uploadTask.ref
+          .getDownloadURL()
+          .timeout(
+            const Duration(seconds: 3),
+            onTimeout: () => throw TimeoutException('Lấy URL Storage quá thời gian'),
+          );
 
       return FirebaseStorageResult(
         imageUrl: downloadUrl,
@@ -78,6 +107,17 @@ class FirebaseStorageService {
   Future<bool> deleteExpenseImage({String? imagePath, String? imageUrl}) async {
     if ((imagePath == null || imagePath.isEmpty) &&
         (imageUrl == null || imageUrl.isEmpty)) {
+      return false;
+    }
+
+    if (AuthRepository.isPlaceholderConfig) {
+      return false;
+    }
+    try {
+      if (FirebaseAuth.instance.currentUser == null) {
+        return false;
+      }
+    } catch (_) {
       return false;
     }
 
