@@ -5,11 +5,13 @@
 [![Material 3](https://img.shields.io/badge/Material_3-VKU_Navy-0D3268)](https://m3.material.io)
 [![Test](https://img.shields.io/badge/Tests-33%2F33%20Passed-brightgreen)](test/)
 [![Release APK](https://img.shields.io/badge/Release_APK-v1.0.0-blue?logo=android)](https://github.com/nt-hzy3n/mobile_mini_project3/releases/tag/v1.0.0)
+[![Demo Video](https://img.shields.io/badge/Demo_Video-MP4-E50914?logo=googlechrome)](https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/demo_video.mp4)
 
 > **Course:** Cross-Platform Mobile App Development (VKU)  
 > **Student:** Nguyen Thi Huyen (Student ID: 23IT110)  
 > **GitHub Repository:** [https://github.com/nt-hzy3n/mobile_mini_project3](https://github.com/nt-hzy3n/mobile_mini_project3)  
-> **Release APK Download:** [Download APK v1.0.0](https://github.com/nt-hzy3n/mobile_mini_project3/releases/tag/v1.0.0) (hoặc xem file `vku_expense_qr.apk` tại thư mục gốc)  
+> **Release APK Download:** [Download APK v1.0.0](https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/vku_expense_qr.apk) (hoặc xem file `vku_expense_qr.apk` tại thư mục gốc)  
+> **Demo Walkthrough Video:** [Xem / Tải Video Demo](https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/demo_video.mp4) (hoặc xem file `docs/demo_video.mp4`)  
 > **Project Scope:** Mini-Project 3 (Week 8)
 
 ---
@@ -138,6 +140,25 @@ CẬP NHẬT TỔNG QUAN (Dashboard) & THỐNG KÊ (CustomPainter Charts)
    - Donut Chart động với `Canvas.drawArc` phân bổ 6 danh mục.
    - Weekly Bar Chart động với `Canvas.drawRRect` thể hiện chi tiêu 7 ngày (T2 - CN) có tooltip tương tác khi chạm.
 8. **Material 3 & Dark Theme:** Màu chủ đạo VKU Navy (`#0D3268`), chuyển đổi mượt mà giữa Sáng/Tối qua `SharedPreferences`.
+
+---
+
+## Demo Video & Screenshots
+
+### 🎬 Video Demo (Walkthrough)
+* **Xem / Tải Video Demo từ GitHub Release:** [demo_video.mp4 (Release v1.0.0)](https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/demo_video.mp4)
+* Video minh họa trọn vẹn quy trình hoạt động thực tế trên ứng dụng: Đăng nhập nhanh bằng tài khoản 1-Click Demo, chọn ảnh biên lai giao dịch chuyển khoản ngân hàng, hệ thống tự động bóc tách dữ liệu thông minh qua VietQR và Google ML Kit OCR on-device, kiểm tra form tại Review Screen, lưu trữ lên Cloud Firestore và đồng bộ biểu đồ thời gian thực.
+
+### 📱 Ảnh chụp màn hình ứng dụng (Screenshots)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/nt-hzy3n/mobile_mini_project3/master/docs/screenshots/01_login_screen.png" width="30%" alt="Login Screen" />
+  <img src="https://raw.githubusercontent.com/nt-hzy3n/mobile_mini_project3/master/docs/screenshots/02_home_dashboard.png" width="30%" alt="Home Dashboard" />
+  <img src="https://raw.githubusercontent.com/nt-hzy3n/mobile_mini_project3/master/docs/screenshots/03_review_verify_screen.png" width="30%" alt="Review Screen" />
+</p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/nt-hzy3n/mobile_mini_project3/master/docs/screenshots/04_expense_detail_screen.png" width="30%" alt="Expense Detail" />
+  <img src="https://raw.githubusercontent.com/nt-hzy3n/mobile_mini_project3/master/docs/screenshots/05_edit_expense_dialog.png" width="30%" alt="Edit Dialog" />
+</p>
 
 ---
 

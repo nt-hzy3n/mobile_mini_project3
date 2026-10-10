@@ -9,6 +9,7 @@
 **SINH VIÊN THỰC HIỆN:** Nguyen Thi Huyen — **MÃ SINH VIÊN:** 23IT110  
 **GITHUB REPOSITORY:** [https://github.com/nt-hzy3n/mobile_mini_project3](https://github.com/nt-hzy3n/mobile_mini_project3)  
 **RELEASE APK:** [Tải file APK cài đặt (v1.0.0)](https://github.com/nt-hzy3n/mobile_mini_project3/releases/tag/v1.0.0) | File cục bộ: `vku_expense_qr.apk`  
+**DEMO VIDEO:** [Xem / Tải Video Demo (v1.0.0)](https://github.com/nt-hzy3n/mobile_mini_project3/releases/download/v1.0.0/demo_video.mp4) | File cục bộ: `docs/demo_video.mp4`  
 **NGÀY NỘP:** 08/10/2026  
 
 ---
